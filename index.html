@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Comunidad Cancún App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Core (Estándar para navegador) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; color: #1e293b; margin: 0; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Botón fijo inferior */
+        .sticky-btn-container { position: fixed; bottom: 120px; left: 0; right: 0; display: flex; justify-content: center; z-index: 50; pointer-events: none; }
+        .sticky-btn-action { pointer-events: auto; }
+        /* Navegación inferior */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-top: 1px solid #f1f5f9; padding: 0.75rem 0.25rem 2rem 0.25rem; display: flex; justify-content: space-around; align-items: center; z-index: 100; border-radius: 2rem 2rem 0 0; box-shadow: 0 -8px 30px rgba(0,0,0,0.06); }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- CONFIGURACIÓN DE DATOS ---
+        const authorizedEmails = ["rodrigotovar7@gmail.com", "rodrigotovar1@gmail.com"];
+        const whatsappNumber = "529981414009"; 
+        const schoolFormUrl = "https://forms.gle/UT1JKvLRvfovNACW9";
+        const lastServiceUrl = "https://www.youtube.com/watch?v=HS0T43zQMDs";
+        const channelUrl = "https://www.youtube.com/@ComunidadCancún";
+        const comunidadLinktree = "https://linktr.ee/comunidad_cancun?utm_source=qr_code";
+        const vtrLinktree = "https://linktr.ee/VengaTuReinoCancun__?utm_source=qr_code";
+        const libro4PdfUrl = "https://drive.google.com/file/d/1ZJoF1MZTuyg_kCThuyRt2wX8USZT1Y9L/view?usp=sharing";
+
+        const youthGroups = [
+            { id: 1, name: "Grupo +21", schedule: "Miércoles - 8:00 PM", desc: "Jóvenes Adultos.", color: "bg-blue-500" },
+            { id: 2, name: "Surfers", schedule: "Viernes - 8:00 PM", desc: "15 a 20 años.", color: "bg-cyan-500" },
+            { id: 3, name: "Warriors", schedule: "Sábados - 6:00 PM", desc: "11 a 14 años.", color: "bg-red-500" },
+        ];
+
+        const ministriesData = [
+            { id: 'm1', name: "Alabanza", icon: "music", color: "text-blue-600", bg: "bg-blue-50", desc: "Adoración y música." },
+            { id: 'm2', name: "Audio", icon: "volume-2", color: "text-indigo-600", bg: "bg-indigo-50", desc: "Ingeniería de sonido." },
+            { id: 'm3', name: "Ujieres", icon: "user-check", color: "text-emerald-600", bg: "bg-emerald-50", desc: "Hospitalidad." },
+            { id: 'm4', name: "Kids", icon: "baby", color: "text-pink-500", bg: "bg-pink-50", desc: "Ministerio de niños." },
+            { id: 'm5', name: "Logística", icon: "compass", color: "text-amber-600", bg: "bg-amber-50", desc: "Apoyo en eventos." },
+        ];
+
+        // Componente de Icono - Solución Definitiva (data-lucide)
+        const Icon = ({ name, className = "w-5 h-5", strokeWidth = 2.5 }) => {
+            React.useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name, className]);
+
+            return <i data-lucide={name} className={className} style={{ strokeWidth }}></i>;
+        };
+
+        const App = () => {
+            const [user, setUser] = React.useState(null);
+            const [activeTab, setActiveTab] = React.useState('home');
+            const [platformView, setPlatformView] = React.useState('menu');
+            const [selectedBook, setSelectedBook] = React.useState(null);
+            const [showPrayerForm, setShowPrayerForm] = React.useState(false);
+            const [prayerText, setPrayerText] = React.useState('');
+            const [toast, setToast] = React.useState(null);
+
+            const notify = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+
+            const handleLogin = (auth = true) => {
+                const email = auth ? "rodrigotovar7@gmail.com" : "visitante@gmail.com";
+                setUser({ email, name: email.split('@')[0], photo: `https://ui-avatars.com/api/?name=${email}&background=0D47A1&color=fff` });
+                notify("Sesión iniciada");
+            };
+
+            const logout = () => { setUser(null); setActiveTab('home'); setPlatformView('menu'); notify("Sesión cerrada"); };
+
+            // --- VISTAS ---
+
+            const renderHome = () => (
+                <div className="space-y-6 animate-in text-left pb-10">
+                    <section className="bg-gradient-to-br from-blue-600 to-indigo-800 rounded-[3.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+                        <h2 className="text-4xl font-black italic uppercase leading-none mb-4 tracking-tighter">Servicio General</h2>
+                        <div className="space-y-2 mb-8 text-blue-100">
+                            <p className="flex items-center gap-4"><Icon name="clock" /> Domingos • 11 AM y 6 PM</p>
+                            <p className="flex items-center gap-4"><Icon name="map-pin" /> Comunidad Cancún</p>
+                        </div>
+                        <a href={lastServiceUrl} target="_blank" className="bg-white text-blue-600 font-black py-4 px-8 rounded-2xl shadow-xl text-[10px] uppercase inline-flex items-center gap-2 active:scale-95 transition-all">Último Servicio <Icon name="youtube" className="w-4 h-4" /></a>
+                        <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-white/10 rounded-full blur-[100px]"></div>
+                    </section>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <button onClick={() => setShowPrayerForm(true)} className="bg-white p-8 rounded-[2.8rem] border border-slate-100 flex flex-col items-center active:bg-slate-50 transition-colors shadow-sm"><div className="bg-orange-50 p-5 rounded-2xl mb-4 text-orange-500"><Icon name="message-square" className="w-6 h-6" /></div><span className="text-[10px] font-black uppercase tracking-widest text-slate-700">Peticiones</span></button>
+                        <button onClick={() => setActiveTab('love_table')} className="bg-white p-8 rounded-[2.8rem] border border-slate-100 flex flex-col items-center active:bg-slate-50 transition-colors shadow-sm"><div className="bg-pink-50 p-5 rounded-2xl mb-4 text-pink-500"><Icon name="heart" className="w-6 h-6" /></div><span className="text-[10px] font-black uppercase tracking-widest text-slate-700">Donaciones</span></button>
+                    </div>
+
+                    <section className="bg-blue-600 rounded-[3.5rem] p-10 text-white shadow-xl text-center active:scale-[0.98] transition-all">
+                        <h3 className="text-3xl font-black uppercase italic mb-2 tracking-tighter">¿NUEVO EN CASA?</h3>
+                        <p className="text-lg font-bold tracking-widest bg-white/20 px-8 py-2 rounded-full inline-block mb-10 uppercase italic">¡CONECTEMOS!</p>
+                        <div className="flex justify-center gap-10">
+                            <a href={comunidadLinktree} target="_blank" className="flex flex-col items-center gap-2 group"><div className="bg-white p-4 rounded-3xl text-blue-600 shadow-lg group-hover:scale-105 transition-transform"><Icon name="qr-code" className="w-12 h-12" /></div><p className="text-[10px] font-black uppercase tracking-widest text-white">Comunidad</p></a>
+                            <a href={vtrLinktree} target="_blank" className="flex flex-col items-center gap-2 group"><div className="bg-white p-4 rounded-3xl text-indigo-600 shadow-lg group-hover:scale-105 transition-transform"><Icon name="qr-code" className="w-12 h-12" /></div><p className="text-[10px] font-black uppercase tracking-widest text-white">VTR</p></a>
+                        </div>
+                    </section>
+                </div>
+            );
+
+            const renderVision = () => (
+                <div className="animate-in text-left">
+                    <div className="px-2 mb-10 text-left"><h3 className="font-black text-2xl text-slate-800 uppercase italic">Nuestra Visión</h3><p className="text-slate-400 text-[10px] font-black uppercase mt-1 tracking-widest leading-none">Crecer • Servir • Transformar</p></div>
+                    <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl relative overflow-hidden mb-10"><div className="absolute left-0 top-0 bottom-0 w-3 bg-blue-600"></div><Icon name="graduation-cap" className="w-12 h-12 text-blue-600 mb-6" /><h4 className="text-2xl font-black text-slate-800 uppercase italic mb-4">Escuela de Ministerio</h4><p className="text-slate-500 text-sm italic mb-8 leading-relaxed">Formación bíblica y ministerial oficial. Ciclo 2026.</p><button onClick={() => window.open(schoolFormUrl, '_blank')} className="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] shadow-xl text-xs uppercase border-b-4 border-blue-800 text-center active:scale-95 transition-all">Inscribirme Ahora</button></div>
+                    
+                    {/* ENCUENTROS RESTAURADO */}
+                    <div className="space-y-4 px-2">
+                        <h4 className="font-black text-slate-800 uppercase text-lg italic flex items-center gap-2"><div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div> Encuentros</h4>
+                        <div className="bg-white p-7 rounded-[2rem] border border-slate-100 flex items-center gap-5 shadow-sm active:bg-slate-50 transition-colors" onClick={() => window.open(`https://wa.me/${whatsappNumber}?text=Info sobre Encuentro Jesús`)}><div className="bg-indigo-50 p-4 rounded-2xl text-indigo-600"><Icon name="heart" /></div><div className="flex-1"><p className="font-black uppercase text-sm">Encuentro con Jesús</p><p className="text-[10px] text-slate-400 font-bold uppercase italic mt-1">Sanidad y Libertad.</p></div><Icon name="chevron-right" className="text-slate-300" /></div>
+                        <div className="bg-white p-7 rounded-[2rem] border border-slate-100 flex items-center gap-5 shadow-sm active:bg-slate-50 transition-colors" onClick={() => window.open(`https://wa.me/${whatsappNumber}?text=Info sobre Lanzamiento`)}><div className="bg-blue-50 p-4 rounded-2xl text-blue-600"><Icon name="zap" /></div><div className="flex-1"><p className="font-black uppercase text-sm">Lanzamiento</p><p className="text-[10px] text-slate-400 font-bold uppercase italic mt-1">Propósito y Liderazgo.</p></div><Icon name="chevron-right" className="text-slate-300" /></div>
+                    </div>
+                </div>
+            );
+
+            const renderStudent = () => {
+                if (!user) return (
+                    <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 space-y-10 text-center animate-in">
+                        <div className="bg-slate-100 p-12 rounded-[4rem] text-slate-300 shadow-inner"><Icon name="user-circle" className="w-24 h-24" /></div>
+                        <div className="space-y-3"><h3 className="text-2xl font-black text-slate-800 uppercase italic">Acceso Estudiantes</h3><p className="text-slate-500 text-sm px-10 italic">Inicia sesión con tu cuenta oficial.</p></div>
+                        <button onClick={() => handleLogin(true)} className="flex items-center justify-center gap-4 w-full bg-white border-2 border-slate-100 p-6 rounded-[2.2rem] font-black text-slate-700 shadow-sm active:scale-95"><img src="https://www.google.com/favicon.ico" className="w-6 h-6" /> Entrar con Google</button>
+                    </div>
+                );
+                if (!authorizedEmails.includes(user.email)) return (
+                    <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center space-y-8 animate-in text-center">
+                        <div className="bg-red-50 p-10 rounded-full text-red-500 border-4 border-white shadow-xl mx-auto"><Icon name="alert-circle" className="w-14 h-14" /></div>
+                        <h3 className="text-2xl font-black text-red-600 uppercase italic text-center">Acceso Denegado</h3>
+                        <p className="text-slate-500 text-sm italic">El correo <span className="text-slate-900 font-bold underline">{user.email}</span> no está autorizado.</p>
+                        <button onClick={logout} className="text-slate-400 text-[10px] font-black uppercase underline tracking-widest pt-4">Cerrar Sesión</button>
+                    </div>
+                );
+                if (platformView === 'book-detail') return (
+                    <div className="space-y-8 animate-in text-left pb-10">
+                        <div className="flex items-center justify-between"><button onClick={() => setPlatformView('book-list')} className="flex items-center gap-2 text-slate-400 font-black text-[10px] uppercase"><Icon name="chevron-left" /> Volver</button><button onClick={() => window.open(libro4PdfUrl)} className="bg-black text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase border border-white/10 active:scale-95"><Icon name="book-open" className="text-orange-400 w-4 h-4 mr-2" /> Leer libro</button></div>
+                        <h3 className="font-black text-2xl px-2 uppercase italic tracking-tighter">Libro 4: El Fuego</h3>
+                        {[1, 2].map(cap => (
+                            <div key={cap} className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
+                                <div className="bg-slate-50 px-8 py-5 font-black text-slate-800 uppercase text-xs italic flex justify-between items-center text-left">Capítulo {cap} <span className="text-orange-600 uppercase">Activo</span></div>
+                                <div className="p-8 space-y-4">
+                                    <p className="text-slate-500 text-sm italic text-left">Evaluación y tarea semanal disponible.</p>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        <button onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSeCWXQYynw3QMe0LTGCnxOdekwUQYcqa3jfYOzTVgIYaAbvbw/viewform?usp=sharing')} className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest active:scale-95">Reafirmación</button>
+                                        <button onClick={() => window.open('https://docs.google.com/forms/d/e/1FAIpQLSfg05OVI0Mj1RlAXII9b-srF3nlcRfyLPpu-IMjMcCcCOAWDg/viewform?usp=sharing')} className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest text-orange-400 active:scale-95">Realizar Tarea</button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+                if (platformView === 'book-list') return (
+                    <div className="space-y-6 animate-in text-left pb-10">
+                        <button onClick={() => setPlatformView('menu')} className="flex items-center gap-2 text-slate-400 font-black text-[10px] uppercase"><Icon name="chevron-left" /> Volver</button>
+                        <h3 className="font-black text-xl text-slate-800 uppercase px-2 tracking-tighter">Librería</h3>
+                        <div className="grid grid-cols-1 gap-4">
+                            {[1, 2, 3, 4].map(id => {
+                                const isBook4 = id === 4;
+                                return (
+                                    <button key={id} onClick={() => { if(isBook4) setPlatformView('book-detail'); }} className={`bg-white border border-slate-100 p-6 rounded-[2.5rem] flex items-center gap-5 shadow-sm active:scale-95 text-left transition-all ${!isBook4 && 'opacity-40 grayscale'}`}>
+                                        <div className={`${isBook4 ? 'bg-orange-600' : 'bg-slate-400'} p-4 rounded-2xl text-white shadow-lg`}><Icon name={isBook4 ? "zap" : "lock"} /></div>
+                                        <div className="flex-1"><p className="font-black text-slate-800 uppercase text-sm italic">Libro {id}</p><p className="text-[9px] text-slate-400 font-black uppercase mt-1 leading-none">{isBook4 ? "Ingresar material" : "Cerrado"}</p></div>
+                                        {isBook4 && <Icon name="arrow-right" className="text-slate-200" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+                return (
+                    <div className="space-y-6 animate-in text-left pb-10">
+                        <div className="flex justify-between items-center px-2 text-left"><h3 className="font-black text-2xl text-slate-800 uppercase italic leading-none">Mi Aula</h3><button onClick={logout} className="p-2.5 bg-red-50 text-red-500 rounded-full active:scale-90 border border-red-100"><Icon name="log-out" /></button></div>
+                        <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden text-left"><div className="flex items-center gap-4 mb-4 relative z-10 text-left"><img src={user.photo} className="w-14 h-14 rounded-2xl border-2 border-white/20 shadow-sm" /><p className="font-black text-xl uppercase italic tracking-tighter text-white">Hola, {user.name}!</p></div><p className="text-blue-50 text-xs italic relative z-10 leading-relaxed">Biblioteca oficial de formación ministerial Comunidad Cancún.</p><div className="absolute -right-12 -bottom-12 w-44 h-44 bg-white/10 rounded-full blur-3xl shadow-2xl shadow-white/5"></div></div>
+                        <div className="space-y-4 pt-6 text-left"><h4 className="px-4 font-black text-slate-400 text-[10px] uppercase tracking-[0.3em] italic text-left">Herramientas Alumno</h4><button onClick={() => setPlatformView('book-list')} className="w-full bg-white border border-slate-100 rounded-[2.5rem] p-7 flex items-center gap-6 shadow-sm active:scale-95 text-left transition-all"><div className="bg-orange-50 p-5 rounded-3xl text-orange-600 shadow-sm"><Icon name="book-open" className="w-8 h-8" /></div><div className="flex-1 text-left"><p className="font-black text-slate-800 uppercase text-lg italic tracking-tight leading-none text-left text-left">Librería Digital</p><p className="text-[10px] text-slate-400 font-bold mt-1 uppercase text-left">Acceder ahora</p></div><Icon name="arrow-right" /></button><button onClick={() => window.open(`https://wa.me/${whatsappNumber}`)} className="w-full bg-white border border-slate-100 rounded-[2.5rem] p-7 flex items-center gap-6 shadow-sm active:scale-95 text-left transition-all"><div className="bg-emerald-50 p-5 rounded-3xl text-emerald-600 shadow-sm text-left"><Icon name="message-square" className="w-8 h-8" /></div><div className="flex-1 text-left text-left"><p className="font-black text-slate-800 uppercase text-lg italic tracking-tight leading-none text-left text-left">Soporte WhatsApp</p><p className="text-[10px] text-slate-400 font-bold uppercase mt-1 text-left leading-none">Ayuda estudiantes</p></div><Icon name="check-circle-2" className="text-emerald-500" /></button></div>
+                    </div>
+                );
+            };
+
+            const renderContent = () => {
+                switch(activeTab) {
+                    case 'home': return renderHome();
+                    case 'vision': return renderVision();
+                    case 'student': return renderStudent();
+                    case 'ministries': return (
+                        <div className="space-y-6 pb-20 text-left animate-in">
+                            <h3 className="font-black text-2xl px-2 text-slate-800 uppercase italic text-left">Ministerios</h3>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest px-2 italic text-left leading-none mb-4">Sirviendo con excelencia al Rey</p>
+                            <div className="grid grid-cols-1 gap-4 pt-4 pb-44 text-left">
+                                {ministriesData.map(m => (
+                                    <div key={m.id} className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm flex items-start gap-6 active:scale-[0.98] transition-all text-left">
+                                        <div className={`${m.bg} ${m.color} p-5 rounded-3xl shadow-sm text-left`}><Icon name={m.icon} className="w-6 h-6" /></div>
+                                        <div className="flex-1 pt-1 text-left leading-none"><h4 className="font-black text-lg text-slate-800 uppercase italic leading-none text-left">{m.name}</h4><p className="text-slate-500 text-xs font-medium italic mt-2 text-left leading-relaxed">{m.desc}</p></div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="sticky-btn-container"><button onClick={() => window.open(`https://wa.me/${whatsappNumber}?text=Hola, deseo servir`)} className="sticky-btn-action bg-slate-900 text-white font-black py-4 px-10 rounded-full shadow-2xl active:scale-95 flex items-center gap-3 uppercase text-[10px] tracking-widest border-b-4 border-slate-700 shadow-black/30 transition-transform leading-none">¡Quiero Servir! <Icon name="sparkles" className="w-4 h-4 text-amber-400" /></button></div>
+                        </div>
+                    );
+                    case 'love_table': return (
+                        <div className="space-y-6 animate-in text-center pb-10">
+                            <div className="py-10 space-y-4"><div className="bg-pink-50 w-24 h-24 rounded-full flex items-center justify-center mx-auto border-4 border-white shadow-xl text-pink-500"><Icon name="heart" className="w-12 h-12 fill-pink-500/10" /></div><h3 className="font-black text-3xl uppercase italic tracking-tighter">Mesa de Amor</h3><p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Generosidad en Acción</p></div>
+                            <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-sm space-y-8 text-center"><p className="text-slate-600 italic font-medium leading-relaxed">Bendecimos a otros con donaciones de ropa o alimentos.</p>
+                            <div className="grid grid-cols-1 gap-4 text-left"><div className="bg-pink-50/50 p-6 rounded-[2rem] flex items-center gap-4"><div className="bg-white p-4 rounded-2xl text-pink-500 shadow-sm"><Icon name="shirt" /></div><div><h4 className="font-black uppercase italic text-xs leading-none">Ropa</h4><p className="text-[10px] text-slate-500 mt-1">Limpia y en buen estado.</p></div></div><div className="bg-amber-50/50 p-6 rounded-[2rem] flex items-center gap-4"><div className="bg-white p-4 rounded-2xl text-amber-500 shadow-sm"><Icon name="utensils" /></div><div><h4 className="font-black uppercase italic text-xs leading-none">Alimentos</h4><p className="text-[10px] text-slate-500 mt-1">No perecederos.</p></div></div></div>
+                            <button onClick={() => window.open(`https://wa.me/${whatsappNumber}`)} className="w-full bg-pink-600 text-white font-black py-6 rounded-[2rem] shadow-xl shadow-pink-100 active:scale-95 transition-all uppercase text-xs">Coordinar Entrega</button></div>
+                        </div>
+                    );
+                    case 'media': return (
+                        <div className="space-y-6 animate-in text-left pb-10">
+                            <div className="flex justify-between items-center px-2 text-left"><h3 className="font-black text-xl text-slate-800 uppercase italic text-left leading-none">Reuniones</h3><a href={channelUrl} target="_blank" className="text-red-600 flex items-center gap-2 text-[10px] font-black uppercase bg-red-50 px-4 py-2 rounded-full leading-none italic">YouTube <Icon name="youtube" className="w-4 h-4" /></a></div>
+                            {[
+                                { id: "v7mQKeX5NWk", title: "Primicias Enero 2026", date: "18 Ene" },
+                                { id: "HS0T43zQMDs", title: "Servicio Dominical", date: "25 Ene" }
+                            ].map(v => (
+                                <a key={v.id} href={`https://www.youtube.com/watch?v=${v.id}`} target="_blank" className="block bg-white rounded-[3rem] overflow-hidden border border-slate-100 shadow-sm active:opacity-95 group transition-all text-left">
+                                    <div className="aspect-video bg-slate-900 flex items-center justify-center text-white"><Icon name="play-circle" className="w-14 h-14 opacity-50 group-hover:opacity-100 transition-opacity" /></div>
+                                    <div className="p-8 flex justify-between items-center"><div className="text-left leading-none"><h4 className="font-black text-slate-800 uppercase italic leading-none">{v.title}</h4><p className="text-[10px] text-slate-400 mt-2 font-black uppercase tracking-widest leading-none">{v.date}</p></div><Icon name="external-link" className="text-slate-200" /></div>
+                                </a>
+                            ))}
+                        </div>
+                    );
+                    default: return renderHome();
+                }
+            };
+
+            return (
+                <div className="min-h-screen pb-44 overflow-x-hidden selection:bg-blue-100">
+                    {toast && <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[110] bg-slate-900 text-white px-8 py-5 rounded-[2rem] shadow-2xl flex items-center gap-4 border border-white/10 max-w-[90%] text-center shadow-slate-900/30 text-center text-center"><Icon name="check-circle-2" className="text-green-400" /> <span className="text-[11px] font-black uppercase tracking-[0.2em]">{toast}</span></div>}
+                    
+                    <header className="bg-white/80 backdrop-blur-xl border-b sticky top-0 z-40 px-8 py-6 flex justify-between items-center shadow-sm">
+                        <div className="flex items-center gap-3 cursor-pointer text-left" onClick={() => { setActiveTab('home'); setPlatformView('menu'); }}>{user ? <img src={user.photo} className="w-11 h-11 rounded-[1rem] border-2 border-blue-600 p-0.5 shadow-blue-100" /> : <div className="bg-blue-600 p-3 rounded-[1rem] text-white shadow-lg shadow-blue-100 flex items-center justify-center text-left"><Icon name="home" /></div>}<h1 className="font-black text-2xl tracking-tighter text-slate-800 uppercase italic leading-none text-left">Comunidad</h1></div>
+                        <button onClick={() => showNotification("Servicios Dominicales 11AM y 6PM")} className="p-3 bg-slate-100 rounded-full relative active:scale-90 transition-transform"><Icon name="bell" className="text-slate-600" /><span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse shadow-sm shadow-red-200"></span></button>
+                    </header>
+
+                    <main className="max-w-md mx-auto p-6">{renderContent()}</main>
+
+                    <nav className="bottom-nav">
+                        {[
+                            {id: 'home', icon: 'home', label: 'Inicio'},
+                            {id: 'ministries', icon: 'sparkles', label: 'Servir'},
+                            {id: 'vision', icon: 'target', label: 'Visión'},
+                            {id: 'media', icon: 'play-circle', label: 'Reuniones'},
+                            {id: 'student', icon: 'user-circle', label: 'Estudiante'},
+                            {id: 'love_table', icon: 'heart', label: 'Mesa Amor'}
+                        ].map(tab => (
+                            <button key={tab.id} onClick={() => { setActiveTab(tab.id); setPlatformView('menu'); }} className={`flex flex-col items-center gap-1.5 flex-1 min-w-[55px] ${activeTab === tab.id ? 'text-blue-600' : 'text-slate-400'}`}>
+                                <Icon name={tab.icon} />
+                                <span className="text-[7px] font-black uppercase tracking-widest leading-none text-center">{tab.label}</span>
+                            </button>
+                        ))}
+                    </nav>
+
+                    {showPrayerForm && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60] flex items-center justify-center p-5 text-center">
+                            <div className="bg-white w-full max-w-sm rounded-[3.5rem] p-10 shadow-2xl text-center text-slate-800 animate-in">
+                                <div className="flex justify-between items-center mb-6 text-left leading-none text-left"><h3 className="text-2xl font-black text-slate-800 tracking-tighter italic uppercase leading-none text-left text-left">Petición</h3><button onClick={() => setShowPrayerForm(false)} className="p-3 bg-slate-100 rounded-full active:scale-90 text-left text-left"><Icon name="x" className="w-5 h-5 text-slate-400" /></button></div>
+                                <textarea value={prayerText} onChange={(e) => setPrayerText(e.target.value)} className="w-full border-2 border-slate-50 rounded-[2.5rem] p-8 text-sm h-48 mb-8 focus:border-blue-500 outline-none resize-none shadow-inner text-slate-700 font-bold text-left text-left" placeholder="¿Por qué podemos orar hoy?" />
+                                <button onClick={() => { if (prayerText.trim()) window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Petición: ' + prayerText)}`); setShowPrayerForm(false); setPrayerText(''); }} className="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] shadow-xl uppercase text-xs active:scale-95 leading-none shadow-blue-900/30 transition-transform text-center text-center">Enviar WhatsApp</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
